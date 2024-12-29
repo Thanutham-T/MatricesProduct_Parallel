@@ -2,15 +2,16 @@
 #include <iomanip>
 #include <random>
 #include <chrono>
+#include <thread>
 
 template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL);
 
 template<typename T>
-void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL);
+void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END);
 
-template<typename T>
-void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL);
+// template<typename T>
+// void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD);
 
 template<typename T>
 void print_matrix(T** matrix, const size_t ROW, const size_t COL);
@@ -25,7 +26,8 @@ template<typename T>
 void create_operation_matrix(const size_t ROW, const size_t COL);
 
 int main() {
-    create_operation_matrix<int>(8, 8);
+    size_t SIZE = 12;
+    create_operation_matrix<int>(SIZE, SIZE);
     return 0;
 }
 
@@ -52,9 +54,10 @@ void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
 }
 
 template<typename T>
-void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL) {
+void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
     // Perform matrix multiplication (A * B = C)
-    for (size_t i = 0; i < ROW; ++i) {
+    // std::cout << "ID: " << std::this_thread::get_id() << " Start: " << START << " End: " << END << std::endl;
+    for (size_t i = START; i < END; ++i) {
         for (size_t j = 0; j < COL; ++j) {
             C[i][j] = 0;
             for (size_t k = 0; k < COL; ++k)  // Use COL for matrix B's row dimension
@@ -64,12 +67,42 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL) 
 }
 
 template<typename T>
-void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL) {
+void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
+    size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
+    // std::cout << "Using " << cpu_units << " threads." << std::endl;
+    cpu_units = cpu_units - 2; // leaves 2 thread for OS
+    
     auto start_time = std::chrono::high_resolution_clock::now();
-    matrix_product_rc(A, B, C, ROW, COL);
+
+    std::vector<std::thread> threads;
+    size_t rows_per_thread = (ROW <= cpu_units) ? 1 : ((ROW + cpu_units - 1) / cpu_units);
+    // std::cout << rows_per_thread << std::endl;
+    size_t num_threads = (ROW <= cpu_units) ? ROW : cpu_units;
+
+    for (size_t i = 0; i < num_threads; ++i) {
+        size_t start_row = i * rows_per_thread;
+        size_t end_row = (i + 1) * rows_per_thread;
+        
+        if (end_row > ROW) {
+            end_row = ROW;
+        }
+
+        threads.push_back(
+            std::move(
+                std::thread([A, B, C, ROW, COL, start_row, end_row]() {
+                    matrix_product_rc(A, B, C, ROW, COL, start_row, end_row);
+                })
+            )
+        );
+    }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_ms = end_time - start_time;
-    std::cout << "Processing Time of " << ROW << 'x' << COL << " :" << elapsed_time_ms << std::endl;
+    std::cout << "Processing Time of " << ROW << 'x' << COL << ": " << elapsed_time_ms.count() << " seconds" << std::endl;
 }
 
 template<typename T>
@@ -118,6 +151,7 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     // print_matrix(matrix_C, ROW, COL);
 
     operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
+    print_matrix(matrix_C, ROW, COL);
 
     deallocate_matrix(matrix_A, ROW);
     deallocate_matrix(matrix_B, ROW);
