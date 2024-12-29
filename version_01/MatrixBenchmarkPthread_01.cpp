@@ -123,8 +123,28 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     deallocate_matrix(matrix_C, ROW);
 }
 
-int main() {
-    size_t SIZE = 128;
-    create_operation_matrix<double>(SIZE, SIZE);
+int main(int argc, char* argv[]) {
+
+    if (argc < 3 || argc > 3) {
+        std::cerr << "Usage: " << argv[0] << " <type> <scale>\n";
+        return 1;
+    }
+
+    std::string mtype = argv[1];
+    const size_t SIZE = static_cast<size_t>(std::stoul(argv[2]));
+
+    if (mtype == "int") {
+        create_operation_matrix<int>(SIZE, SIZE);
+    } else if (mtype == "2long") {
+        create_operation_matrix<long long>(SIZE, SIZE);
+    } else if (mtype == "float") {
+        create_operation_matrix<float>(SIZE, SIZE);
+    } else if (mtype == "double") {
+        create_operation_matrix<double>(SIZE, SIZE);
+    } else {
+        std::cerr << "Unsupported type: " << mtype << "\n";
+        return 1;
+    }
+
     return 0;
 }
