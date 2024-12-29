@@ -152,6 +152,8 @@ int main(int argc, char* argv[]) {
             std::cerr << "Unsupported type: " << mtype << "\n";
             return 1;
         }
+        if(round < (ROUND-1))
+            std::this_thread::sleep_for(std::chrono::seconds(7));
     }
 
     std::cout << "Average time: " << (sum_times / ROUND) << " seconds" << std::endl;
