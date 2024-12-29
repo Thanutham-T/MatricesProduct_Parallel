@@ -6,6 +6,7 @@
 #include <future>
 #include <functional>
 
+// Function to generate random matrix elements
 template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     std::random_device rd;                          // Obtain a random number from hardware
@@ -28,6 +29,7 @@ void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     }    
 }
 
+// Parallel matrix multiplication(Row x Column) using OpenMP
 template<typename T>
 void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
     // Perform matrix multiplication (A * B = C)
@@ -41,6 +43,7 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
     }
 }
 
+// Parallel matrix multiplication(Row x Row) using OpenMP
 template<typename T>
 void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
     // Perform matrix multiplication (A * B = C)
@@ -54,6 +57,7 @@ void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
     }
 }
 
+// Function for matrix Operation Timer the calculation time
 template<typename T>
 double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0, const std::string& method = "") {
     size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
@@ -106,6 +110,7 @@ double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL,
     return elapsed_time_ms.count();
 }
 
+// Print matrix
 template<typename T>
 void print_matrix(T** matrix, const size_t ROW, const size_t COL) {
     for (size_t row = 0; row < ROW; ++row) {
@@ -116,6 +121,7 @@ void print_matrix(T** matrix, const size_t ROW, const size_t COL) {
     }
 }
 
+// Function matrix allocate heap memory for 2D Array
 template <typename T>
 T** allocate_matrix(const size_t ROW, const size_t COL) {
     T** matrix = new T*[ROW];
@@ -125,6 +131,7 @@ T** allocate_matrix(const size_t ROW, const size_t COL) {
     return matrix;
 }
 
+// Function matrix deallocate heap memory for 2D Array
 template <typename T>
 void deallocate_matrix(T** matrix, const size_t ROW) {
     for (size_t row = 0; row < ROW; ++row) {
@@ -133,6 +140,7 @@ void deallocate_matrix(T** matrix, const size_t ROW) {
     delete[] matrix;  // Use delete[] for array of pointers
 }
 
+// Function to create matrix and run matrix operation
 template<typename T>
 void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_times, const std::string& method = "") {
     T** matrix_A = allocate_matrix<T>(ROW, COL);
