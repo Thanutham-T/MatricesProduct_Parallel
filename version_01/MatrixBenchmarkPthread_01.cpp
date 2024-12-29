@@ -6,6 +6,9 @@ template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL);
 
 template<typename T>
+void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL);
+
+template<typename T>
 void print_matrix(T** matrix, const size_t ROW, const size_t COL);
 
 template <typename T>
@@ -42,6 +45,18 @@ void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
             }
         }
     }    
+}
+
+template<typename T>
+void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL) {
+    // Perform matrix multiplication (A * B = C)
+    for (size_t i = 0; i < ROW; ++i) {
+        for (size_t j = 0; j < COL; ++j) {
+            C[i][j] = 0;
+            for (size_t k = 0; k < COL; ++k)  // Use COL for matrix B's row dimension
+                C[i][j] += A[i][k] * B[k][j]; // Row × Column multiplication
+        }
+    }
 }
 
 template<typename T>
@@ -85,7 +100,8 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     generate_matrix_element(matrix_B, ROW, COL);
     print_matrix(matrix_B, ROW, COL);
 
-    std::cout << "Matrix C:" << std::endl;
+    std::cout << "Matrix C (Product of A and B):" << std::endl;
+    matrix_product_rc(matrix_A, matrix_B, matrix_C, ROW, COL);
     print_matrix(matrix_C, ROW, COL);
 
     deallocate_matrix(matrix_A, ROW);
