@@ -18,7 +18,7 @@ template<typename T>
 void create_operation_matrix(const size_t ROW, const size_t COL);
 
 int main() {
-    create_operation_matrix<double>(8, 8);
+    create_operation_matrix<int>(8, 8);
     return 0;
 }
 
@@ -26,13 +26,22 @@ template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     std::random_device rd;                          // Obtain a random number from hardware
     std::mt19937 gen(rd());                         // Seed the generator
-    std::uniform_real_distribution<T> distr(0, 10);  // Define the range
 
-    for (size_t row = 0; row < ROW; ++row) {
-        for (size_t col = 0; col < COL; ++col) {
-            matrix[row][col] = distr(gen);
+    if constexpr (std::is_integral<T>::value) {         // random integral type
+        std::uniform_int_distribution<T> distr(0, 10);  // Define the range
+        for (size_t row = 0; row < ROW; ++row) {
+            for (size_t col = 0; col < COL; ++col) {
+                matrix[row][col] = distr(gen);
+            }
         }
-    }
+    } else if constexpr (std::is_floating_point<T>::value) { // random floating-point type
+        std::uniform_real_distribution<T> distr(0.0, 10.0);  // Define the range
+        for (size_t row = 0; row < ROW; ++row) {
+            for (size_t col = 0; col < COL; ++col) {
+                matrix[row][col] = distr(gen);
+            }
+        }
+    }    
 }
 
 template<typename T>
