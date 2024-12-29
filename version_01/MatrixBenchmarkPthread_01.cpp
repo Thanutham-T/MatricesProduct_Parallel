@@ -40,7 +40,7 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
 }
 
 template<typename T>
-void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
+double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
     size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
     cpu_units = (cpu_units > 2) ? cpu_units - 2 : 1; // leaves 1-2 thread for OS
@@ -77,6 +77,8 @@ void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, s
     std::chrono::duration<double> elapsed_time_ms = end_time - start_time;
     std::cout << "[" << typeid(T).name() << "]";
     std::cout << "Processing Time of " << ROW << 'x' << COL << ": " << elapsed_time_ms.count() << " seconds" << std::endl;
+
+    return elapsed_time_ms.count();
 }
 
 template<typename T>
@@ -107,7 +109,7 @@ void deallocate_matrix(T** matrix, const size_t ROW) {
 }
 
 template<typename T>
-void create_operation_matrix(const size_t ROW, const size_t COL) {
+void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_times) {
     T** matrix_A = allocate_matrix<T>(ROW, COL);
     T** matrix_B = allocate_matrix<T>(ROW, COL);
     T** matrix_C = allocate_matrix<T>(ROW, COL);
@@ -115,7 +117,7 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     generate_matrix_element(matrix_A, ROW, COL);
     generate_matrix_element(matrix_B, ROW, COL);
 
-    operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
+    sum_times += operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
     // print_matrix(matrix_C, ROW, COL);
 
     deallocate_matrix(matrix_A, ROW);
@@ -125,26 +127,34 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
 
 int main(int argc, char* argv[]) {
 
-    if (argc < 3 || argc > 3) {
-        std::cerr << "Usage: " << argv[0] << " <type> <scale>\n";
+    if (argc < 4 || argc > 4) {
+        std::cerr << "Usage: " << argv[0] << " <type> <scale> <round>\n";
         return 1;
     }
 
     std::string mtype = argv[1];
     const size_t SIZE = static_cast<size_t>(std::stoul(argv[2]));
+    const int ROUND = std::stoi(argv[3]);
 
-    if (mtype == "int") {
-        create_operation_matrix<int>(SIZE, SIZE);
-    } else if (mtype == "2long") {
-        create_operation_matrix<long long>(SIZE, SIZE);
-    } else if (mtype == "float") {
-        create_operation_matrix<float>(SIZE, SIZE);
-    } else if (mtype == "double") {
-        create_operation_matrix<double>(SIZE, SIZE);
-    } else {
-        std::cerr << "Unsupported type: " << mtype << "\n";
-        return 1;
+    double sum_times = 0;
+
+    for(int round = 0; round < ROUND; ++round) {
+        std::cout << "ROUND[" << (round+1) << "]: ";
+        if (mtype == "int") {
+            create_operation_matrix<int>(SIZE, SIZE, sum_times);
+        } else if (mtype == "2long") {
+            create_operation_matrix<long long>(SIZE, SIZE, sum_times);
+        } else if (mtype == "float") {
+            create_operation_matrix<float>(SIZE, SIZE, sum_times);
+        } else if (mtype == "double") {
+            create_operation_matrix<double>(SIZE, SIZE, sum_times);
+        } else {
+            std::cerr << "Unsupported type: " << mtype << "\n";
+            return 1;
+        }
     }
+
+    std::cout << "Average time: " << (sum_times / ROUND) << " seconds" << std::endl;
 
     return 0;
 }
