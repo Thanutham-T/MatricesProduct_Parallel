@@ -5,33 +5,6 @@
 #include <thread>
 
 template<typename T>
-void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL);
-
-template<typename T>
-void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END);
-
-// template<typename T>
-// void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD);
-
-template<typename T>
-void print_matrix(T** matrix, const size_t ROW, const size_t COL);
-
-template <typename T>
-T** allocate_matrix(const size_t ROW, const size_t COL);
-
-template <typename T>
-void deallocate_matrix(T** matrix, const size_t ROW);
-
-template<typename T>
-void create_operation_matrix(const size_t ROW, const size_t COL);
-
-int main() {
-    size_t SIZE = 12;
-    create_operation_matrix<int>(SIZE, SIZE);
-    return 0;
-}
-
-template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     std::random_device rd;                          // Obtain a random number from hardware
     std::mt19937 gen(rd());                         // Seed the generator
@@ -138,17 +111,8 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     T** matrix_B = allocate_matrix<T>(ROW, COL);
     T** matrix_C = allocate_matrix<T>(ROW, COL);
 
-    // std::cout << "Matrix A:" << std::endl;
     generate_matrix_element(matrix_A, ROW, COL);
-    // print_matrix(matrix_A, ROW, COL);
-
-    // std::cout << "Matrix B:" << std::endl;
     generate_matrix_element(matrix_B, ROW, COL);
-    // print_matrix(matrix_B, ROW, COL);
-
-    // std::cout << "Matrix C (Product of A and B):" << std::endl;
-    // matrix_product_rc(matrix_A, matrix_B, matrix_C, ROW, COL);
-    // print_matrix(matrix_C, ROW, COL);
 
     operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
     print_matrix(matrix_C, ROW, COL);
@@ -156,4 +120,10 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     deallocate_matrix(matrix_A, ROW);
     deallocate_matrix(matrix_B, ROW);
     deallocate_matrix(matrix_C, ROW);
+}
+
+int main() {
+    size_t SIZE = 8;
+    create_operation_matrix<double>(SIZE, SIZE);
+    return 0;
 }
