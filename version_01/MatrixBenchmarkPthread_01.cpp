@@ -40,6 +40,19 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
 }
 
 template<typename T>
+void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
+    // Perform matrix multiplication (A * B = C)
+    // std::cout << "ID: " << std::this_thread::get_id() << " Start: " << START << " End: " << END << std::endl;
+    for (size_t i = START; i < END; ++i) {
+        for (size_t j = 0; j < COL; ++j) {
+            C[i][j] = 0;
+            for (size_t k = 0; k < COL; ++k)  // Use COL for matrix B's row dimension
+                C[i][j] += A[i][k] * B[j][k]; // Row × Row multiplication
+        }
+    }
+}
+
+template<typename T>
 double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
     size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
