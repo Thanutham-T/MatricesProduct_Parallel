@@ -43,7 +43,7 @@ template<typename T>
 void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
     size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
-    cpu_units = cpu_units - 2; // leaves 2 thread for OS
+    cpu_units = (cpu_units > 2) ? cpu_units - 2 : 1; // leaves 1-2 thread for OS
     
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -75,6 +75,7 @@ void operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, s
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_ms = end_time - start_time;
+    std::cout << "[" << typeid(T).name() << "]";
     std::cout << "Processing Time of " << ROW << 'x' << COL << ": " << elapsed_time_ms.count() << " seconds" << std::endl;
 }
 
@@ -115,7 +116,7 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
     generate_matrix_element(matrix_B, ROW, COL);
 
     operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
-    print_matrix(matrix_C, ROW, COL);
+    // print_matrix(matrix_C, ROW, COL);
 
     deallocate_matrix(matrix_A, ROW);
     deallocate_matrix(matrix_B, ROW);
@@ -123,7 +124,7 @@ void create_operation_matrix(const size_t ROW, const size_t COL) {
 }
 
 int main() {
-    size_t SIZE = 8;
+    size_t SIZE = 128;
     create_operation_matrix<double>(SIZE, SIZE);
     return 0;
 }
