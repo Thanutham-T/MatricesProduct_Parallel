@@ -29,15 +29,15 @@ void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     }    
 }
 
-// Parallel matrix multiplication(Row x Column) using OpenMP
+// Parallel matrix multiplication(Row x Column) (A * B = C) using OpenMP
 template<typename T>
 void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD=0) {
-    // Perform matrix multiplication (A * B = C)
     // std::cout << "ID: " << std::this_thread::get_id() << " Start: " << START << " End: " << END << std::endl;
     int i,j,k;
-    size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
+    size_t cpu_units = omp_get_max_threads();
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
     cpu_units = (cpu_units > 2) ? cpu_units - 2 : 1; // leaves 1-2 thread for OS
+
     #pragma omp parallel for shared(A, B, C) private(i, j, k) schedule(static) num_threads(cpu_units)
     for (i = 0; i < ROW; ++i) {
         for (j = 0; j < COL; ++j) {
@@ -48,15 +48,15 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
     }
 }
 
-// Parallel matrix multiplication(Row x Row) using OpenMP
+// Parallel matrix multiplication(Row x Row) (A * B = C) using OpenMP
 template<typename T>
 void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD=0) {
-    // Perform matrix multiplication (A * B = C)
     // std::cout << "ID: " << std::this_thread::get_id() << " Start: " << START << " End: " << END << std::endl;
     int i,j,k;
-    size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
+    size_t cpu_units = omp_get_max_threads();
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
     cpu_units = (cpu_units > 2) ? cpu_units - 2 : 1; // leaves 1-2 thread for OS
+
     #pragma omp parallel for shared(A, B, C) private(i, j, k) schedule(static) num_threads(cpu_units)
     for (i = 0; i < ROW; ++i) {
         for (j = 0; j < COL; ++j) {
