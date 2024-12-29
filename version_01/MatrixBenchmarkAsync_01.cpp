@@ -94,6 +94,10 @@ double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL,
         );
     }
 
+    for(auto& f: futures){
+        f.wait();
+    }
+
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_ms = end_time - start_time;
     std::cout << "[" << typeid(T).name() << "]";
