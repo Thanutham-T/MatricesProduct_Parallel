@@ -28,7 +28,7 @@ void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
     }    
 }
 
-// Parallel matrix multiplication(Row x Column) using OpenMP
+// Parallel matrix multiplication(Row x Column)
 template<typename T>
 void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
     // Perform matrix multiplication (A * B = C)
@@ -42,7 +42,7 @@ void matrix_product_rc(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
     }
 }
 
-// Parallel matrix multiplication(Row x Row) using OpenMP
+// Parallel matrix multiplication(Row x Row)
 template<typename T>
 void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, const size_t START, const size_t END) {
     // Perform matrix multiplication (A * B = C)
