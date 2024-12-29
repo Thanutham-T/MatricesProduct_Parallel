@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include <thread>
+#include <functional>
 
 template<typename T>
 void generate_matrix_element(T** matrix, const size_t ROW, const size_t COL) {
@@ -53,10 +54,21 @@ void matrix_product_rr(T** A, T** B, T** C, const size_t ROW, const size_t COL, 
 }
 
 template<typename T>
-double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0) {
+double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL, size_t NUMTHREAD = 0, const std::string& method = "") {
     size_t cpu_units = NUMTHREAD == 0 ? std::thread::hardware_concurrency() : NUMTHREAD;
     // std::cout << "Using " << cpu_units << " threads." << std::endl;
     cpu_units = (cpu_units > 2) ? cpu_units - 2 : 1; // leaves 1-2 thread for OS
+
+    std::function<void(T**, T**, T**, size_t, size_t, size_t, size_t)> matrix_calculation;
+
+    if (method == "rr") {
+        matrix_calculation = matrix_product_rr<T>;
+    } else if (method == "rc") {
+        matrix_calculation = matrix_product_rc<T>;
+    } else {
+        std::cerr << "Invalid method specified." << std::endl;
+        return -1;
+    }
     
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -75,8 +87,8 @@ double operation_matrix(T** A, T** B, T** C, const size_t ROW, const size_t COL,
 
         threads.push_back(
             std::move(
-                std::thread([A, B, C, ROW, COL, start_row, end_row]() {
-                    matrix_product_rc(A, B, C, ROW, COL, start_row, end_row);
+                std::thread([&matrix_calculation, A, B, C, ROW, COL, start_row, end_row]() {
+                    matrix_calculation(A, B, C, ROW, COL, start_row, end_row);
                 })
             )
         );
@@ -122,7 +134,7 @@ void deallocate_matrix(T** matrix, const size_t ROW) {
 }
 
 template<typename T>
-void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_times) {
+void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_times, const std::string& method = "") {
     T** matrix_A = allocate_matrix<T>(ROW, COL);
     T** matrix_B = allocate_matrix<T>(ROW, COL);
     T** matrix_C = allocate_matrix<T>(ROW, COL);
@@ -130,7 +142,7 @@ void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_tim
     generate_matrix_element(matrix_A, ROW, COL);
     generate_matrix_element(matrix_B, ROW, COL);
 
-    sum_times += operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL);
+    sum_times += operation_matrix(matrix_A, matrix_B, matrix_C, ROW, COL, 0, method);
     // print_matrix(matrix_C, ROW, COL);
 
     deallocate_matrix(matrix_A, ROW);
@@ -140,27 +152,28 @@ void create_operation_matrix(const size_t ROW, const size_t COL, double& sum_tim
 
 int main(int argc, char* argv[]) {
 
-    if (argc < 4 || argc > 4) {
-        std::cerr << "Usage: " << argv[0] << " <type> <scale> <round>\n";
+    if (argc < 5 || argc > 5) {
+        std::cerr << "Usage: " << argv[0] << " <type> <scale> <round> <product_method(rc,rr)>\n";
         return 1;
     }
 
     std::string mtype = argv[1];
     const size_t SIZE = static_cast<size_t>(std::stoul(argv[2]));
     const int ROUND = std::stoi(argv[3]);
+    std::string method = argv[4];
 
     double sum_times = 0;
 
     for(int round = 0; round < ROUND; ++round) {
         std::cout << "ROUND[" << (round+1) << "]: ";
         if (mtype == "int") {
-            create_operation_matrix<int>(SIZE, SIZE, sum_times);
+            create_operation_matrix<int>(SIZE, SIZE, sum_times, method);
         } else if (mtype == "2long") {
-            create_operation_matrix<long long>(SIZE, SIZE, sum_times);
+            create_operation_matrix<long long>(SIZE, SIZE, sum_times, method);
         } else if (mtype == "float") {
-            create_operation_matrix<float>(SIZE, SIZE, sum_times);
+            create_operation_matrix<float>(SIZE, SIZE, sum_times, method);
         } else if (mtype == "double") {
-            create_operation_matrix<double>(SIZE, SIZE, sum_times);
+            create_operation_matrix<double>(SIZE, SIZE, sum_times, method);
         } else {
             std::cerr << "Unsupported type: " << mtype << "\n";
             return 1;
@@ -169,7 +182,7 @@ int main(int argc, char* argv[]) {
             std::this_thread::sleep_for(std::chrono::seconds(7));
     }
 
-    std::cout << "Average time: " << (sum_times / ROUND) << " seconds" << std::endl;
+    std::cout << "[" << method << "]" << "Average time: " << (sum_times / ROUND) << " seconds" << std::endl;
 
     return 0;
 }
